@@ -1,33 +1,55 @@
 import React, { Component } from 'react';
-
+import SwapiService from '../../services/swapi-service';
 import './random-planet.css';
+import Spinner from '../spinner';
+import PlanetView from './planet-view';
+import ErrorIndicator from '../error-indicator';
 
 export default class RandomPlanet extends Component {
 
+  swapiService = new SwapiService();
+
+  state = {
+    planet: {},
+    loading: true,
+    error: false
+  };
+
+  componentDidMount(){
+    this.updatePlanet();
+    this.interval = setInterval(this.updatePlanet, 3000);
+  }
+
+  onPlanetLoaded = (planet) => {
+    this.setState({
+      planet,
+      loading: false
+      });
+  };
+
+  onError = (error) => {
+    this.setState({
+      error: true,
+      loading: false
+    })
+  };
+
+  updatePlanet = () => {
+    const id = 2 + Math.random() * 17 ^ 0;
+    this.swapiService.getPlanet(id)
+      .then(this.onPlanetLoaded)
+      .catch(this.onError)
+  }
+
   render() {
+    const { planet, loading, error } = this.state;
+    const spinner = loading ? <Spinner /> : null;
     return (
       <div className="random-planet jumbotron rounded">
-        <img className="planet-image"
-             src="https://starwars-visualguide.com/assets/img/planets/5.jpg" />
-        <div>
-          <h4>Planet Name</h4>
-          <ul className="list-group list-group-flush">
-            <li className="list-group-item">
-              <span className="term">Population</span>
-              <span>123124</span>
-            </li>
-            <li className="list-group-item">
-              <span className="term">Rotation Period</span>
-              <span>43</span>
-            </li>
-            <li className="list-group-item">
-              <span className="term">Diameter</span>
-              <span>100</span>
-            </li>
-          </ul>
+        {loading && <Spinner />}
+        {error && <ErrorIndicator />}
+        {!loading && !error && <PlanetView planet={planet} />}
         </div>
-      </div>
-
-    );
+    )
   }
 }
